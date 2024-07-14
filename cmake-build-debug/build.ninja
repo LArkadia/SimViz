@@ -49,16 +49,16 @@ cmake_ninja_workdir = /home/ehecatl/repositorios/SimViz/cmake-build-debug/
 
 build cmake_object_order_depends_target_SimViz: phony || CMakeFiles/SimViz.dir
 
-build CMakeFiles/SimViz.dir/main.cpp.o: CXX_COMPILER__SimViz_unscanned_Debug /home/ehecatl/repositorios/SimViz/main.cpp || cmake_object_order_depends_target_SimViz
-  DEP_FILE = CMakeFiles/SimViz.dir/main.cpp.o.d
-  FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+build CMakeFiles/SimViz.dir/src/main.cpp.o: CXX_COMPILER__SimViz_unscanned_Debug /home/ehecatl/repositorios/SimViz/src/main.cpp || cmake_object_order_depends_target_SimViz
+  DEP_FILE = CMakeFiles/SimViz.dir/src/main.cpp.o.d
+  FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
   INCLUDES = -I/home/ehecatl/repositorios/SimViz/.
   OBJECT_DIR = CMakeFiles/SimViz.dir
-  OBJECT_FILE_DIR = CMakeFiles/SimViz.dir
+  OBJECT_FILE_DIR = CMakeFiles/SimViz.dir/src
 
 build CMakeFiles/SimViz.dir/lib/Sim_Viz/Sim_viz.cpp.o: CXX_COMPILER__SimViz_unscanned_Debug /home/ehecatl/repositorios/SimViz/lib/Sim_Viz/Sim_viz.cpp || cmake_object_order_depends_target_SimViz
   DEP_FILE = CMakeFiles/SimViz.dir/lib/Sim_Viz/Sim_viz.cpp.o.d
-  FLAGS = -g -std=gnu++14 -fdiagnostics-color=always
+  FLAGS = -g -std=gnu++23 -fdiagnostics-color=always
   INCLUDES = -I/home/ehecatl/repositorios/SimViz/.
   OBJECT_DIR = CMakeFiles/SimViz.dir
   OBJECT_FILE_DIR = CMakeFiles/SimViz.dir/lib/Sim_Viz
@@ -71,7 +71,7 @@ build CMakeFiles/SimViz.dir/lib/Sim_Viz/Sim_viz.cpp.o: CXX_COMPILER__SimViz_unsc
 #############################################
 # Link the executable SimViz
 
-build SimViz: CXX_EXECUTABLE_LINKER__SimViz_Debug CMakeFiles/SimViz.dir/main.cpp.o CMakeFiles/SimViz.dir/lib/Sim_Viz/Sim_viz.cpp.o | /usr/lib/x86_64-linux-gnu/libGLEW.so /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so
+build SimViz: CXX_EXECUTABLE_LINKER__SimViz_Debug CMakeFiles/SimViz.dir/src/main.cpp.o CMakeFiles/SimViz.dir/lib/Sim_Viz/Sim_viz.cpp.o | /usr/lib/x86_64-linux-gnu/libGLEW.so /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so
   FLAGS = -g
   LINK_LIBRARIES = /usr/lib/x86_64-linux-gnu/libGLEW.so  /usr/lib/x86_64-linux-gnu/libglfw.so.3.3  /usr/lib/x86_64-linux-gnu/libGLX.so  /usr/lib/x86_64-linux-gnu/libOpenGL.so
   OBJECT_DIR = CMakeFiles/SimViz.dir

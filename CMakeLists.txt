@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(SimViz)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 23)
 
 include_directories(.)
 
@@ -28,7 +28,7 @@ include_directories(${GLM_INCLUDE_DIRS})
 
 
 add_executable(SimViz
-        main.cpp
+        src/main.cpp
         lib/Sim_Viz/Sim_viz.hpp
         lib/Sim_Viz/Sim_viz.cpp)
 target_link_libraries(SimViz ${GLEW_LIBRARIES} glfw OpenGL::GL ${GLM_LIBRARIES})
