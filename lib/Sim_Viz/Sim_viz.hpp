@@ -25,13 +25,14 @@ namespace SV{
     void Say_hello();
     class Window{
     private:
-        GLFWwindow* window;
+
         static uint8_t windows_amount;
         std::string title;
         uint32_t width;
         uint32_t height;
         glm::vec3 background_color;
     public:
+        GLFWwindow* window;
         class Transformations;
         class Shaders;
         Window(std::string title,uint32_t width, uint32_t height,glm::vec3 bg_color);
@@ -52,7 +53,9 @@ namespace SV{
             glm::mat4 final_transformation_matrix;
             void Update_FTM();
         public:
-            //Mount FTM to shader program uniform transformation
+            Transformations();
+
+//Mount FTM to shader program uniform transformation
             void Mount_FTM_2_shader(const std::string& shader_name);
             //Mount externally calculated matrices
             void Set_View_matrix(glm::mat4 new_view_matrix);
@@ -75,23 +78,32 @@ namespace SV{
             static GLint Get_shader_program(const std::string& name);
             static void Free_all();
         };
-        Transformations transformations{};
+        Transformations transformations;
         Shaders         shaders;
     };
     class Object{
         friend Window;
     private:
-        std::unique_ptr<float[]> Vertexes;
-        uint Vertexes_size;
-        std::unique_ptr<float[]> Indexes;
-        uint Indexes_size;
+        std::map<std::string,glm::vec3> Vertexes;
+        GLenum Draw_mode;
+        GLuint VAO,VBO,EBO;
+        void SetupObject();
     public:
+        [[nodiscard]] GLuint    GetVao() const;
+        [[nodiscard]] int      GetVertex_amount() const;
+
+        Object();
+        Object(const GLenum& Draw_mode,std::unique_ptr<float[]> ,uint vertexes_size);
+        Object(const GLenum& Draw_mode,const std::vector<glm::vec3>& vertex);
+        Object(const GLenum& Draw_mode,std::unique_ptr<float[]> vertex,uint vertex_size,std::unique_ptr<float[]> index,uint index_size);
+        Object(const GLenum& Draw_mode,const std::vector<glm::vec3>& vertex,const std::vector<glm::vec3>& index);
         void Set_vertexes(std::unique_ptr<float[]> vertex,uint32_t size);
         void Set_vertexes(const std::vector<glm::vec3>& vertex);
         void Set_indexes(std::unique_ptr<float[]> index,uint32_t size);
         void Set_indexes(const std::vector<glm::vec3>& index);
         static std::unique_ptr<float[]> Unpack_vertex(std::vector<glm::vec3> packed_vertex);
         static std::vector<glm::vec3> Pack_vertex(std::unique_ptr<float[]> vertex,uint32_t size);
+        static std::vector<glm::vec3> Extract_vertex(std::vector<glm::vec3> vertex);
     };
 
     enum SF{
@@ -104,6 +116,7 @@ namespace SV{
         transformations = 0b0010'0000'0000'0000
 
     };
+
 };
 
 

@@ -2,68 +2,97 @@
 // Created by ehecatl on 7/12/24.
 //
 #include "lib/Sim_Viz/Sim_viz.hpp"
-
 int main(){
     glm::vec3 Rojo(0.1f,0.1f,0.1f);
     SV::Window window0("Test",600,500,Rojo);
     window0.Get_context();
     SV::Window::Shaders::Load_custom_shaders("main","src/Vertex.glsl","src/Fragment.glsl");
-    window0.transformations.Create_Projection_matrix(600,500,150.0f,0.1f,500.0f);
-    window0.transformations.Create_View_matrix(glm::vec3(10.0,10.0,10.0),glm::vec3(0.0,0.0,0.0),glm::vec3(0.0,1.0,0.0));
-    window0.transformations.Mount_FTM_2_shader("main");
+    window0.transformations.Create_Projection_matrix(600,500,60.0f,0.1f,100.0f);
+    window0.transformations.Create_View_matrix(glm::vec3(2,2,-2),glm::vec3(0.0,0.0,0.0),glm::vec3(0.0,1.0,0.0));
     glUseProgram(SV::Window::Shaders::Get_shader_program("main"));
+    window0.transformations.Mount_FTM_2_shader("main");
 
-    std::vector<glm::vec3> Cubo;
-    Cubo.reserve(8*2*3); // Reservar 8 vertices de 3 dimensiones 2, posicion - color
-    Cubo.emplace_back(-1.0f, -1.0f,  1.0f);
-    Cubo.emplace_back(1.0f, 0.0f, 0.0f);
 
-    Cubo.emplace_back(1.0f, -1.0f,  1.0f);
-    Cubo.emplace_back(0.0f, 1.0f, 0.0f);
+    std::vector<glm::vec3> triangulo = {
+            {-0.5f, -0.5f,  0.0f}, // Posición del primer vértice
+            {1.0f, 0.0f, 0.0f},   // Color del primer vértice (si así lo deseas)
 
-    Cubo.emplace_back(1.0f,  1.0f,  1.0f);
-    Cubo.emplace_back(0.0f, 0.0f, 1.0f);
+            {0.5f, -0.5f,  0.0f}, // Posición del segundo vértice
+            {0.0f, 1.0f, 0.0f},   // Color del segundo vértice
 
-    Cubo.emplace_back(-1.0f,  1.0f,  1.0f);
-    Cubo.emplace_back(1.0f, 1.0f, 0.0f);
+            {0.0f, 0.5f,  0.0f},  // Posición del tercer vértice
+            {0.0f, 0.0f, 1.0f}    // Color del tercer vértice
+    };
 
-    Cubo.emplace_back(-1.0f, -1.0f, -1.0f);
-    Cubo.emplace_back(1.0f, 0.0f, 1.0f);
 
-    Cubo.emplace_back( 1.0f, -1.0f, -1.0f);
-    Cubo.emplace_back(0.0f, 1.0f, 1.0f);
+    std::vector<glm::vec3> cubo = {
+            // Cara delantera (rojo)
+            {-1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
+            {1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
+            {1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
 
-    Cubo.emplace_back(1.0f,  1.0f, -1.0f);
-    Cubo.emplace_back(1.0f, 1.0f, 1.0f);
+            {-1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
+            {1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
+            {-1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
 
-    Cubo.emplace_back(-1.0f,  1.0f, -1.0f);
-    Cubo.emplace_back(0.0f, 0.0f, 0.0f);
+            // Cara trasera (verde)
+            {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
+            {1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
+            {1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
 
-    GLuint VAO,VBO;
+            {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
+            {1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
+            {-1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
+
+            // Cara izquierda (azul)
+            {-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, 1.0f},
+            {-1.0f,  1.0f, -1.0f}, {0.0f, 0.0f, 1.0f},
+            {-1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f},
+
+            {-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, 1.0f},
+            {-1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f},
+            {-1.0f, -1.0f,  1.0f}, {0.0f, 0.0f, 1.0f},
+
+            // Cara derecha (amarillo)
+            {1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 0.0f},
+            {1.0f,  1.0f, -1.0f}, {1.0f, 1.0f, 0.0f},
+            {1.0f,  1.0f,  1.0f}, {1.0f, 1.0f, 0.0f},
+
+            {1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 0.0f},
+            {1.0f,  1.0f,  1.0f}, {1.0f, 1.0f, 0.0f},
+            {1.0f, -1.0f,  1.0f}, {1.0f, 1.0f, 0.0f},
+
+            // Cara superior (magenta)
+            {-1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 1.0f},
+            {1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 1.0f},
+            {1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 1.0f},
+
+            {-1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 1.0f},
+            {1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 1.0f},
+            {-1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 1.0f},
+
+            // Cara inferior (cian)
+            {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 1.0f},
+            {1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 1.0f},
+            {1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 1.0f},
+
+            {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 1.0f},
+            {1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 1.0f},
+            {-1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 1.0f}
+    };
+
+    SV::Object Triangulo(GL_TRIANGLES,triangulo);
+    SV::Object Cubo(GL_TRIANGLES,cubo);
 
     window0.Clear();
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER,Cubo.size()*3, SV::Object::Unpack_vertex(Cubo).get(), GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-    // Colores de los vértices
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_POINTS,0,Cubo.size()*3);
+    glBindVertexArray(Cubo.GetVao());
+    glDrawArrays(GL_TRIANGLES,0,Cubo.GetVertex_amount());
 
     window0.Present_renderer();
     while(!window0.Should_close()){
-
-
-
-
-
-
+        glDrawArrays(GL_TRIANGLES,0,Cubo.GetVertex_amount());
+        window0.Present_renderer();
 
     }
 }

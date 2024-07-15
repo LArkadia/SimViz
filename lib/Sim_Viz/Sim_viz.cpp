@@ -4,7 +4,7 @@
 
 #include "Sim_viz.hpp"
 
-#include <utility>
+
 
 namespace SV{
     uint8_t Window::windows_amount = 0;
@@ -49,6 +49,7 @@ namespace SV{
 
     void Window::Get_context() {
         glfwMakeContextCurrent(window);
+        //glewInit();
     }
 
     Window::~Window() {
@@ -114,6 +115,13 @@ namespace SV{
         GLint FTM_Loc = glGetUniformLocation(shader_program,"FTM");
         glUseProgram(shader_program);
         glUniformMatrix4fv(FTM_Loc,1,GL_FALSE,glm::value_ptr(final_transformation_matrix));
+    }
+
+    Window::Transformations::Transformations() {
+        view_matrix                 = glm::mat4(1);
+        projection_matrix           = glm::mat4(1);
+        rotation_matrix             = glm::mat4(1);
+        final_transformation_matrix = glm::mat4(1);
     }
 
 
@@ -184,7 +192,7 @@ namespace SV{
             GLint L_L; //Log length
             glGetShaderiv(shader[shader_name],GL_INFO_LOG_LENGTH,&L_L);
             auto log = new GLchar[L_L];
-            glGetShaderInfoLog(shader[shader_name],L_L, nullptr,log);
+            glGetProgramInfoLog(shader[shader_name],L_L, nullptr,log);
             std::string E_L(log); // Error log
             delete[] log;
             throw std::runtime_error(std::string("Error linking Shader Program: ").append(log).append("\n"));
@@ -226,8 +234,8 @@ namespace SV{
         std::unique_ptr<float[]> unpacked_vertex = std::make_unique<float[]>(packed_vertex.size()*3);
         for (uint i = 0; i < packed_vertex.size(); ++i) {
             unpacked_vertex[i*3] = packed_vertex[i].x;
-            unpacked_vertex[i*3 + 1] = packed_vertex[i].x;
-            unpacked_vertex[i*3 + 2] = packed_vertex[i].x;
+            unpacked_vertex[i*3 + 1] = packed_vertex[i].y;
+            unpacked_vertex[i*3 + 2] = packed_vertex[i].z;
         }
         return unpacked_vertex;
     }
@@ -250,5 +258,78 @@ namespace SV{
         auto vertex_unpacked = Object::Unpack_vertex(index);
         Vertexes = std::move(vertex_unpacked);
         Vertexes_size = index.size()*3;
+    }
+
+    Object::Object() {
+        Vertexes_size = 0;
+        Indexes_size = 0;
+        Vertexes = nullptr;
+        Indexes = nullptr;
+        Draw_mode = 0;
+        VAO = 0;
+        VBO = 0;
+        EBO = 0;
+    }
+
+    Object::Object(const GLenum& draw_mode,std::unique_ptr<float[]> vertex,uint vertex_size) {
+        Vertexes_size = vertex_size;
+        Indexes_size = 0;
+        Vertexes = std::move(vertex);
+        Indexes = nullptr;
+        Draw_mode = draw_mode;
+        VAO = 0;
+        VBO = 0;
+        EBO = 0;
+        SetupObject();
+
+
+    }
+
+    Object::Object(const GLenum& draw_mode,std::unique_ptr<float[]> vertex,uint vertex_size, std::unique_ptr<float[]> index,uint index_size) {
+        Vertexes_size = vertex_size;
+        Indexes_size = index_size;
+        Vertexes = std::move(vertex);
+        Indexes = std::move(index);
+        Draw_mode = draw_mode;
+        VAO = 0;
+        VBO = 0;
+        EBO = 0;
+    }
+
+    Object::Object(const GLenum& draw_mode,const std::vector<glm::vec3>&vertex)
+        :Object(draw_mode,std::move(Unpack_vertex(vertex)),vertex.size()*3) {}
+
+    Object::Object(const GLenum& draw_mode,const std::vector<glm::vec3>& vertex,const std::vector<glm::vec3>& index)
+        :Object(draw_mode,
+           std::move(Unpack_vertex(vertex)),vertex.size()*3,
+           std::move(Unpack_vertex(index)),index.size()) {}
+
+    void Object::SetupObject() {
+        GLuint vao_t,vbo_t,ebo_t = 0;
+        glGenVertexArrays(1, &vao_t);
+        glGenBuffers(1, &vbo_t);
+        glBindVertexArray(vao_t);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_t);
+        glBufferData(GL_ARRAY_BUFFER, Vertexes_size*sizeof(float), Vertexes.get(), GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+        if (Indexes) {
+            glGenBuffers(1, &ebo_t);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_t);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indexes_size * sizeof(unsigned int), Indexes.get(), GL_DYNAMIC_DRAW);
+        }
+        VAO = vao_t;
+        VBO = vbo_t;
+        EBO = ebo_t;
+    }
+
+    GLuint Object::GetVao() const {
+        return VAO;
+    }
+
+    int Object::GetVertex_amount() const {
+        return Vertexes_size/2;
     }
 }

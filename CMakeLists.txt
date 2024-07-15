@@ -30,5 +30,7 @@ include_directories(${GLM_INCLUDE_DIRS})
 add_executable(SimViz
         src/main.cpp
         lib/Sim_Viz/Sim_viz.hpp
-        lib/Sim_Viz/Sim_viz.cpp)
+        lib/Sim_Viz/Sim_viz.cpp
+        lib/Sim_Viz/Geometry.hpp
+        lib/Sim_Viz/Geometry.cpp)
 target_link_libraries(SimViz ${GLEW_LIBRARIES} glfw OpenGL::GL ${GLM_LIBRARIES})
