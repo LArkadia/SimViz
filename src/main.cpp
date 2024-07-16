@@ -2,16 +2,20 @@
 // Created by ehecatl on 7/12/24.
 //
 #include "lib/Sim_Viz/Sim_viz.hpp"
+#include "lib/Sim_Viz/Geometry.hpp"
 int main(){
     std::cout << "Iniciando\n";
     glm::vec3 Rojo(0.1f,0.1f,0.1f);
+
+
     SV::Window window0("Test",600,500,Rojo);
-    window0.Get_context();
-    SV::Window::Shaders::Load_custom_shaders("main","src/Vertex.glsl","src/Fragment.glsl");
+    window0.shaders->Load_custom_shaders("main","src/Vertex.glsl","src/Fragment.glsl");
+    window0.shaders->Use("main");
     window0.transformations.Create_Projection_matrix(600,500,60.0f,0.1f,100.0f);
-    window0.transformations.Create_View_matrix(glm::vec3(2,2,-2),glm::vec3(0.0,0.0,0.0),glm::vec3(0.0,1.0,0.0));
-    glUseProgram(SV::Window::Shaders::Get_shader_program("main"));
-    window0.transformations.Mount_FTM_2_shader("main");
+    window0.transformations.Create_View_matrix(glm::vec3(2,2,2),glm::vec3(0.0,0.0,0.0),glm::vec3(0.0,1.0,0.0));
+    window0.Mount_FTM_2_shader("main");
+
+
     std::vector<std::vector<glm::vec3>> triangulo_crudo;
     triangulo_crudo = {
             {
@@ -70,89 +74,28 @@ int main(){
     };
 
     long tam = 36;
-/*
-    std::vector<glm::vec3> triangulo = {
-            {-0.5f, -0.5f,  0.0f}, // Posición del primer vértice
-            {1.0f, 0.0f, 0.0f},   // Color del primer vértice (si así lo deseas)
-
-            {0.5f, -0.5f,  0.0f}, // Posición del segundo vértice
-            {0.0f, 1.0f, 0.0f},   // Color del segundo vértice
-
-            {0.0f, 0.5f,  0.0f},  // Posición del tercer vértice
-            {0.0f, 0.0f, 1.0f}    // Color del tercer vértice
-    };
 
 
-    std::vector<glm::vec3> cubo = {
-            // Cara delantera (rojo)
-            {-1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
-            {1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
-            {1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
 
-            {-1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
-            {1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
-            {-1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 0.0f},
 
-            // Cara trasera (verde)
-            {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
-            {1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
-            {1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
-
-            {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
-            {1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
-            {-1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f},
-
-            // Cara izquierda (azul)
-            {-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, 1.0f},
-            {-1.0f,  1.0f, -1.0f}, {0.0f, 0.0f, 1.0f},
-            {-1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f},
-
-            {-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, 1.0f},
-            {-1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f},
-            {-1.0f, -1.0f,  1.0f}, {0.0f, 0.0f, 1.0f},
-
-            // Cara derecha (amarillo)
-            {1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 0.0f},
-            {1.0f,  1.0f, -1.0f}, {1.0f, 1.0f, 0.0f},
-            {1.0f,  1.0f,  1.0f}, {1.0f, 1.0f, 0.0f},
-
-            {1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 0.0f},
-            {1.0f,  1.0f,  1.0f}, {1.0f, 1.0f, 0.0f},
-            {1.0f, -1.0f,  1.0f}, {1.0f, 1.0f, 0.0f},
-
-            // Cara superior (magenta)
-            {-1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 1.0f},
-            {1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 1.0f},
-            {1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 1.0f},
-
-            {-1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 1.0f},
-            {1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 1.0f},
-            {-1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 1.0f},
-
-            // Cara inferior (cian)
-            {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 1.0f},
-            {1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 1.0f},
-            {1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 1.0f},
-
-            {-1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 1.0f},
-            {1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 1.0f},
-            {-1.0f, -1.0f,  1.0f}, {0.0f, 1.0f, 1.0f}
-    };
-    */
-
+    window0.Get_context();
     //SV::Object Triangulo(GL_TRIANGLES,std::move(triangulo_crudo));
-    SV::Object Cubo(GL_TRIANGLES,std::move(cubo_crudo),indices,tam);
-    //SV::Object Cubo(GL_TRIANGLES,cubo);
     window0.Clear();
-
-    glBindVertexArray(Cubo.GetVao());
-    //glDrawArrays(GL_TRIANGLES,0,Cubo.GetVertex_amount());
-
     window0.Present_renderer();
-    while(!window0.Should_close()){
-        //glDrawArrays(GL_TRIANGLES,0,Cubo.GetVertex_amount());
-        glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT, nullptr);
-        window0.Present_renderer();
 
+    //SV::Object Cubo(GL_TRIANGLES,std::move(cubo_crudo),indices,tam);
+    SV::Line linea1({-10.0,0.0,0.0},{10.0,0.0,0.0},{1,0,0});
+    SV::Line linea2({0.0,-10.0,0.0},{0.0,10.0,0.0},{0,1,0});
+    SV::Line linea3({0.0,0.0,-10.0},{0.0,0.0,10.0},{0,0,1});
+
+    while(!window0.Should_close()){
+
+        //Cubo.Draw();
+        linea1.Draw();
+        linea2.Draw();
+        linea3.Draw();
+        //Triangulo.Draw();
+        window0.Present_renderer();
     }
+
 }

@@ -4,30 +4,44 @@
 
 #include "Sim_viz.hpp"
 
+#include <utility>
+
 
 
 namespace SV{
     uint8_t Window::windows_amount = 0;
-    std::map<std::string,GLint> Window::Shaders::shader;
 
-    Window::Window(std::string title, uint32_t width, uint32_t height,glm::vec3 bg_color):title(std::move(title)),width(width),height(height),background_color(bg_color){
-        if (windows_amount == 0){
-            if (!glfwInit()){
-                throw std::runtime_error("Error initializing GLFW.\n");
-            }
+    Window::Window(std::string title, uint32_t width, uint32_t height,glm::vec3 bg_color):Window(std::move(title),width,height,bg_color,nullptr){
+
+    }
+    Window::Window(std::string title, uint32_t width, uint32_t height, glm::vec3 bg_color,Window *shared_resources_window):title(std::move(title)),width(width),height(height),background_color(bg_color){
+     if (windows_amount == 0){
+         if (!glfwInit()){
+
+             throw std::runtime_error("Error initializing GLFW.\n");
+         }
+     }
+     GLFWwindow* shared;
+        if (shared_resources_window == nullptr){
+            shaders = new Shaders;
+            shared = nullptr;
+        }else{
+            shaders = shared_resources_window->shaders;
+            shared = shared_resources_window->window;
         }
-        window = glfwCreateWindow(int(width),int(height),title.c_str(), nullptr, nullptr);
-        if (!window){
-            glfwTerminate();
-            throw std::runtime_error(std::string("Error creating window: ").append(title).append("\n"));
-        }
-        windows_amount++;
-        Get_context();
-        GLenum error = glewInit();
-        if (error != GLEW_OK){
-            throw  std::runtime_error(std::string("Error initializing GLEW: ").append(reinterpret_cast<const char*>(glewGetErrorString(error))).append("\n"));
-        }
-        transformations = Transformations();
+     window = glfwCreateWindow(int(width),int(height),title.c_str(), nullptr, shared);
+     if (!window){
+         glfwTerminate();
+         throw std::runtime_error(std::string("Error creating window: ").append(title).append("\n"));
+     }
+     windows_amount++;
+     Get_context();
+     GLenum error = glewInit();
+     if (error != GLEW_OK){
+         throw  std::runtime_error(std::string("Error initializing GLEW: ").append(reinterpret_cast<const char*>(glewGetErrorString(error))).append("\n"));
+     }
+     transformations = Transformations();
+
     }
     void Window::Set_background_color(glm::vec3 color) {
         background_color = color;
@@ -55,7 +69,7 @@ namespace SV{
     Window::~Window() {
         windows_amount--;
         if (windows_amount == 0){
-            Shaders::Free_all();
+            shaders->Free_all();
         }
         glfwDestroyWindow(window);
 
@@ -68,6 +82,16 @@ namespace SV{
     uint32_t Window::Get_height() const {
         return height;
     }
+
+    void Window::Mount_FTM_2_shader(const std::string &shader_name) {
+        transformations.Update_FTM();
+        auto shader_program = shaders->Get_shader_program(shader_name);
+        GLint FTM_Loc = glGetUniformLocation(shader_program,"FTM");
+        glUseProgram(shader_program);
+        glUniformMatrix4fv(FTM_Loc,1,GL_FALSE,glm::value_ptr(transformations.GetFTM()));
+    }
+
+
 
 
     void Say_hello(){
@@ -109,20 +133,16 @@ namespace SV{
         Update_FTM();
     }
 
-    void Window::Transformations::Mount_FTM_2_shader(const std::string &shader_name) {
-        Update_FTM();
-        auto shader_program = Shaders::Get_shader_program(shader_name);
-        GLint FTM_Loc = glGetUniformLocation(shader_program,"FTM");
-        glUseProgram(shader_program);
-        glUniformMatrix4fv(FTM_Loc,1,GL_FALSE,glm::value_ptr(final_transformation_matrix));
-    }
-
     Window::Transformations::Transformations()
     :view_matrix(glm::mat4(1))
     ,rotation_matrix(glm::mat4(1))
     ,projection_matrix(glm::mat4(1))
     ,final_transformation_matrix(glm::mat4(1))
     {}
+
+    const glm::mat4 &Window::Transformations::GetFTM() const {
+        return final_transformation_matrix;
+    }
 
 
     std::string Window::Shaders::Read_file(const char *filepath) {
@@ -213,10 +233,15 @@ namespace SV{
     }
 
     GLint Window::Shaders::Get_shader_program(const std::string& name) {
+
         if (shader[name] == 0){
             throw  std::runtime_error(std::string("Shader Program not found:").append(name).append("\n"));
         }
         return shader[name];
+    }
+
+    void Window::Shaders::Use(const std::string &shader_name) {
+        glUseProgram(Shaders::Get_shader_program(shader_name));
     }
 
 
@@ -260,7 +285,7 @@ namespace SV{
         if (indexes != nullptr) {
             glGenBuffers(1, &ebo_t);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_t);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(indexes_size * sizeof(unsigned int)), indexes, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(indexes_size* sizeof(uint)), indexes, GL_DYNAMIC_DRAW);
         }
         VAO = vao_t;
         VBO = vbo_t;
@@ -274,12 +299,36 @@ namespace SV{
     int Object::GetVertex_amount() const {
         return (int)Height;
     }
+    /*
+    Object::Object(const GT::Geometrical_components& components) {
+        Height = components.vertex.size();
+        Width = 6;
+        shader_parameters = {
+            components.vertex,
+            std::vector<glm::vec3>(components.vertex.size(),components.color)
+        };
+        Draw_mode = components.default_draw_mode;
+        Indexes_size = (int)components.index_size;
+        if (!shader_parameters.empty()){
+            Height = shader_parameters[0].size();
+            auto vertex       = Pack_shader_params();
+            auto vertex_size  = Get_arrays_size();
+            SetupObject(vertex, vertex_size, reinterpret_cast<uint *>(components.index), components.index_size);
+            free(vertex);
+        }
+        else{
+            VAO = 0;
+            VBO = 0;
+            EBO = 0;
+        }
 
+    }
+    */
     Object::Object(const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors) {
         shader_parameters = std::move(vectors);
         Draw_mode = draw_mode;
         Width = shader_parameters.size()*3;
-
+        Indexes_size = 0;
 
         if (!shader_parameters.empty()){
             Height = shader_parameters[0].size();
@@ -302,21 +351,21 @@ namespace SV{
     Object::Object(const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors, uint *indexes,long indexes_size) {
         shader_parameters = std::move(vectors);
         Draw_mode = draw_mode;
-        uint width = shader_parameters.size()*3;
-        uint height = 0;
+        Width = shader_parameters.size()*3;
+        Indexes_size = (int)indexes_size;
         if (!shader_parameters.empty()){
-            height = shader_parameters[0].size();
+            Height = shader_parameters[0].size();
             auto vertex       = Pack_shader_params();
-            auto vertex_size  = shader_parameters[0].size();
+            auto vertex_size  = Get_arrays_size();
             SetupObject(vertex,(long)vertex_size,indexes,indexes_size);
+            free(vertex);
         }
         else{
             VAO = 0;
             VBO = 0;
             EBO = 0;
-        }
-        Width = width;
-        Height = height;
+        }/*
+        */
     }
 
     float *Object::Pack_shader_params() {
@@ -327,7 +376,7 @@ namespace SV{
                 vertex_arrays[(y*Width)+x]    = shader_parameters[x/3][y].x;
                 vertex_arrays[(y*Width)+x+1]  = shader_parameters[x/3][y].y;
                 vertex_arrays[(y*Width)+x+2]  = shader_parameters[x/3][y].z;
-                //printf("%d,%d: %f,%f,%f\n",x,y,vertex_arrays[(y*Width)+x],vertex_arrays[(y*Width)+x],vertex_arrays[(y*Width)+x]);
+                //printf("%d->%d,%d; %d: %f,%f,%f\n",Width*Height,x,y,(y*Width)+x,vertex_arrays[(y*Width)+x],vertex_arrays[(y*Width)+x+1],vertex_arrays[(y*Width)+x+2]);
             }
         }
 
@@ -336,6 +385,29 @@ namespace SV{
 
     long Object::Get_arrays_size() const {
         return Height*Width;
+    }
+
+    void Object::Draw() const {
+        glBindVertexArray(VAO);
+        //printf("VAO: %d, Indexes_size: %d",VAO,(int)Get_arrays_size());
+        if (Indexes_size != 0){
+            glDrawElements(Draw_mode,Indexes_size,GL_UNSIGNED_INT, nullptr);
+        }else{
+            glDrawArrays(Draw_mode,0,(int)Get_arrays_size());
+        }
+    }
+
+
+    Line::Line(glm::vec3 origin, glm::vec3 target, glm::vec3 color):Object(GL_LINES,std::move(Generate_vectors(origin,target,color))){
+    }
+
+    std::vector<std::vector<glm::vec3 >> Line::Generate_vectors(glm::vec3 origin, glm::vec3 target, glm::vec3 color) {
+        std::vector<std::vector<glm::vec3>> vectors={
+                {origin,target},
+                std::vector<glm::vec3>(2,color)
+        };
+
+        return std::move(vectors);
     }
 
 
