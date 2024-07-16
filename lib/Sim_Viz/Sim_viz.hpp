@@ -37,13 +37,13 @@ namespace SV{
         class Shaders;
         Window(std::string title,uint32_t width, uint32_t height,glm::vec3 bg_color);
         ~Window();
-        void Get_context();
+        void Get_context() const;
         [[nodiscard]] uint32_t Get_width() const;
         [[nodiscard]] uint32_t Get_height() const;
         void Set_background_color(glm::vec3 color);
         void Clear() const;
-        void Present_renderer();
-        bool Should_close();
+        void Present_renderer() const;
+        bool Should_close() const;
 
         class Transformations{
         private:
@@ -84,27 +84,29 @@ namespace SV{
     class Object{
         friend Window;
     private:
-        std::map<std::string,glm::vec3> Vertexes;
+        std::vector<std::vector<glm::vec3>> shader_parameters;
+        uint    Width,Height;
         GLenum Draw_mode;
         GLuint VAO,VBO,EBO;
-        void SetupObject();
+        void SetupObject(float* vertexes,long vertexes_size);
+        void SetupObject(float* vertexes,long vertexes_size,uint* indexes,long indexes_size);
     public:
         [[nodiscard]] GLuint    GetVao() const;
         [[nodiscard]] int      GetVertex_amount() const;
 
-        Object();
-        Object(const GLenum& Draw_mode,std::unique_ptr<float[]> ,uint vertexes_size);
-        Object(const GLenum& Draw_mode,const std::vector<glm::vec3>& vertex);
-        Object(const GLenum& Draw_mode,std::unique_ptr<float[]> vertex,uint vertex_size,std::unique_ptr<float[]> index,uint index_size);
-        Object(const GLenum& Draw_mode,const std::vector<glm::vec3>& vertex,const std::vector<glm::vec3>& index);
-        void Set_vertexes(std::unique_ptr<float[]> vertex,uint32_t size);
-        void Set_vertexes(const std::vector<glm::vec3>& vertex);
-        void Set_indexes(std::unique_ptr<float[]> index,uint32_t size);
-        void Set_indexes(const std::vector<glm::vec3>& index);
-        static std::unique_ptr<float[]> Unpack_vertex(std::vector<glm::vec3> packed_vertex);
+        Object(const GLenum& draw_mode,std::vector<std::vector<glm::vec3>> vectors);
+        Object(const GLenum& draw_mode,std::vector<std::vector<glm::vec3>> vectors,uint* indexes,long indexes_size);
+        //Object(const GLenum& Draw_mode,const std::vector<glm::vec3>& vertex);
+        //Object(const GLenum& Draw_mode,const std::vector<glm::vec3>& vertex,const std::vector<glm::vec3>& index);
+        std::vector<glm::vec3> Get_vertexes();
+        [[nodiscard]] long Get_arrays_size() const;
+        float* Pack_shader_params();
+        [[nodiscard]] static float* Unpack_vertexes(std::vector<glm::vec3> packed_vertex);
         static std::vector<glm::vec3> Pack_vertex(std::unique_ptr<float[]> vertex,uint32_t size);
-        static std::vector<glm::vec3> Extract_vertex(std::vector<glm::vec3> vertex);
+
     };
+
+
 
     enum SF{
         _2D             = 0b0000'0000'0000'0000,

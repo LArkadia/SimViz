@@ -38,16 +38,16 @@ namespace SV{
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    void Window::Present_renderer() {
+    void Window::Present_renderer() const {
         glfwSwapBuffers(window);
     }
 
-    bool Window::Should_close() {
+    bool Window::Should_close() const {
         glfwPollEvents();
         return glfwWindowShouldClose(window);
     }
 
-    void Window::Get_context() {
+    void Window::Get_context() const {
         glfwMakeContextCurrent(window);
         //glewInit();
     }
@@ -117,12 +117,12 @@ namespace SV{
         glUniformMatrix4fv(FTM_Loc,1,GL_FALSE,glm::value_ptr(final_transformation_matrix));
     }
 
-    Window::Transformations::Transformations() {
-        view_matrix                 = glm::mat4(1);
-        projection_matrix           = glm::mat4(1);
-        rotation_matrix             = glm::mat4(1);
-        final_transformation_matrix = glm::mat4(1);
-    }
+    Window::Transformations::Transformations()
+    :view_matrix(glm::mat4(1))
+    ,rotation_matrix(glm::mat4(1))
+    ,projection_matrix(glm::mat4(1))
+    ,final_transformation_matrix(glm::mat4(1))
+    {}
 
 
     std::string Window::Shaders::Read_file(const char *filepath) {
@@ -219,19 +219,11 @@ namespace SV{
         return shader[name];
     }
 
-    void Object::Set_vertexes(std::unique_ptr<float[]> vertex, uint size) {
-        Vertexes = std::move(vertex);
-        Vertexes_size = size;
-    }
 
-    void Object::Set_vertexes(const std::vector<glm::vec3>& vertex) {
-        auto vertex_unpacked = Object::Unpack_vertex(vertex);
-        Vertexes = std::move(vertex_unpacked);
-        Vertexes_size = vertex.size()*3;
-    }
+    float* Object::Unpack_vertexes(std::vector<glm::vec3> packed_vertex) {
+        if (packed_vertex.empty()){return nullptr;};
+        auto unpacked_vertex = (float*) malloc(packed_vertex.size() * 3 * sizeof(float));
 
-    std::unique_ptr<float[]> Object::Unpack_vertex(std::vector<glm::vec3> packed_vertex) {
-        std::unique_ptr<float[]> unpacked_vertex = std::make_unique<float[]>(packed_vertex.size()*3);
         for (uint i = 0; i < packed_vertex.size(); ++i) {
             unpacked_vertex[i*3] = packed_vertex[i].x;
             unpacked_vertex[i*3 + 1] = packed_vertex[i].y;
@@ -249,76 +241,26 @@ namespace SV{
         return  packed_vertex;
     }
 
-    void Object::Set_indexes(std::unique_ptr<float[]> index, uint32_t size) {
-        Indexes = std::move(index);
-        Indexes_size = size;
+
+
+    void Object::SetupObject(float* vertexes,long vertexes_size){
+        SetupObject(vertexes,vertexes_size, nullptr,0);
     }
-
-    void Object::Set_indexes(const std::vector<glm::vec3>& index) {
-        auto vertex_unpacked = Object::Unpack_vertex(index);
-        Vertexes = std::move(vertex_unpacked);
-        Vertexes_size = index.size()*3;
-    }
-
-    Object::Object() {
-        Vertexes_size = 0;
-        Indexes_size = 0;
-        Vertexes = nullptr;
-        Indexes = nullptr;
-        Draw_mode = 0;
-        VAO = 0;
-        VBO = 0;
-        EBO = 0;
-    }
-
-    Object::Object(const GLenum& draw_mode,std::unique_ptr<float[]> vertex,uint vertex_size) {
-        Vertexes_size = vertex_size;
-        Indexes_size = 0;
-        Vertexes = std::move(vertex);
-        Indexes = nullptr;
-        Draw_mode = draw_mode;
-        VAO = 0;
-        VBO = 0;
-        EBO = 0;
-        SetupObject();
-
-
-    }
-
-    Object::Object(const GLenum& draw_mode,std::unique_ptr<float[]> vertex,uint vertex_size, std::unique_ptr<float[]> index,uint index_size) {
-        Vertexes_size = vertex_size;
-        Indexes_size = index_size;
-        Vertexes = std::move(vertex);
-        Indexes = std::move(index);
-        Draw_mode = draw_mode;
-        VAO = 0;
-        VBO = 0;
-        EBO = 0;
-    }
-
-    Object::Object(const GLenum& draw_mode,const std::vector<glm::vec3>&vertex)
-        :Object(draw_mode,std::move(Unpack_vertex(vertex)),vertex.size()*3) {}
-
-    Object::Object(const GLenum& draw_mode,const std::vector<glm::vec3>& vertex,const std::vector<glm::vec3>& index)
-        :Object(draw_mode,
-           std::move(Unpack_vertex(vertex)),vertex.size()*3,
-           std::move(Unpack_vertex(index)),index.size()) {}
-
-    void Object::SetupObject() {
+    void Object::SetupObject(float* vertexes,long vertexes_size,uint* indexes,long indexes_size) {
         GLuint vao_t,vbo_t,ebo_t = 0;
         glGenVertexArrays(1, &vao_t);
         glGenBuffers(1, &vbo_t);
         glBindVertexArray(vao_t);
         glBindBuffer(GL_ARRAY_BUFFER, vbo_t);
-        glBufferData(GL_ARRAY_BUFFER, Vertexes_size*sizeof(float), Vertexes.get(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(vertexes_size *sizeof(float)), vertexes, GL_DYNAMIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), nullptr);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (3 * sizeof(float)));
         glEnableVertexAttribArray(1);
-        if (Indexes) {
+        if (indexes != nullptr) {
             glGenBuffers(1, &ebo_t);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_t);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indexes_size * sizeof(unsigned int), Indexes.get(), GL_DYNAMIC_DRAW);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(indexes_size * sizeof(unsigned int)), indexes, GL_DYNAMIC_DRAW);
         }
         VAO = vao_t;
         VBO = vbo_t;
@@ -330,6 +272,71 @@ namespace SV{
     }
 
     int Object::GetVertex_amount() const {
-        return Vertexes_size/2;
+        return (int)Height;
     }
+
+    Object::Object(const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors) {
+        shader_parameters = std::move(vectors);
+        Draw_mode = draw_mode;
+        Width = shader_parameters.size()*3;
+
+
+        if (!shader_parameters.empty()){
+            Height = shader_parameters[0].size();
+            auto vertexes       = Pack_shader_params();
+            auto vertexes_size  = Get_arrays_size();
+            SetupObject(vertexes,(long)vertexes_size); // Here
+            free(vertexes);
+        }
+        else{
+            VAO = 0;
+            VBO = 0;
+            EBO = 0;
+        }
+    };
+
+    std::vector<glm::vec3> Object::Get_vertexes() {
+        return (shader_parameters[0]);
+    }
+
+    Object::Object(const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors, uint *indexes,long indexes_size) {
+        shader_parameters = std::move(vectors);
+        Draw_mode = draw_mode;
+        uint width = shader_parameters.size()*3;
+        uint height = 0;
+        if (!shader_parameters.empty()){
+            height = shader_parameters[0].size();
+            auto vertex       = Pack_shader_params();
+            auto vertex_size  = shader_parameters[0].size();
+            SetupObject(vertex,(long)vertex_size,indexes,indexes_size);
+        }
+        else{
+            VAO = 0;
+            VBO = 0;
+            EBO = 0;
+        }
+        Width = width;
+        Height = height;
+    }
+
+    float *Object::Pack_shader_params() {
+        auto vertex_arrays = (float*) malloc(sizeof(float)*Width*Height);
+
+        for (uint y = 0; y < Height; y++) {
+            for (int x = 0; x < Width; x+=3) {
+                vertex_arrays[(y*Width)+x]    = shader_parameters[x/3][y].x;
+                vertex_arrays[(y*Width)+x+1]  = shader_parameters[x/3][y].y;
+                vertex_arrays[(y*Width)+x+2]  = shader_parameters[x/3][y].z;
+                //printf("%d,%d: %f,%f,%f\n",x,y,vertex_arrays[(y*Width)+x],vertex_arrays[(y*Width)+x],vertex_arrays[(y*Width)+x]);
+            }
+        }
+
+        return vertex_arrays;
+    }
+
+    long Object::Get_arrays_size() const {
+        return Height*Width;
+    }
+
+
 }
