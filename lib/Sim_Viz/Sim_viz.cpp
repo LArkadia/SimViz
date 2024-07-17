@@ -17,10 +17,14 @@ namespace SV{
     Window::Window(std::string title, uint32_t width, uint32_t height, glm::vec3 bg_color,Window *shared_resources_window):title(std::move(title)),width(width),height(height),background_color(bg_color){
      if (windows_amount == 0){
          if (!glfwInit()){
-
              throw std::runtime_error("Error initializing GLFW.\n");
          }
      }
+
+     glfwWindowHint(GLFW_SAMPLES, 4);
+        glEnable(GL_MULTISAMPLE);
+        glEnable(GL_LINE_SMOOTH);
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
      GLFWwindow* shared;
         if (shared_resources_window == nullptr){
             shaders = new Shaders;
@@ -73,14 +77,6 @@ namespace SV{
         }
         glfwDestroyWindow(window);
 
-    }
-
-    uint32_t Window::Get_width() const {
-        return width;
-    }
-
-    uint32_t Window::Get_height() const {
-        return height;
     }
 
     void Window::Mount_FTM_2_shader(const std::string &shader_name) {
@@ -222,7 +218,7 @@ namespace SV{
         glDeleteShader(F_S);
     }
 
-    void Window::Shaders::Build_premade_shaders(uint16_t Flags) {
+    void Window::Shaders::Build_premaded_shaders(uint16_t Flags) {
 
     }
 
@@ -268,9 +264,7 @@ namespace SV{
 
 
 
-    void Object::SetupObject(float* vertexes,long vertexes_size){
-        SetupObject(vertexes,vertexes_size, nullptr,0);
-    }
+
     void Object::SetupObject(float* vertexes,long vertexes_size,uint* indexes,long indexes_size) {
         GLuint vao_t,vbo_t,ebo_t = 0;
         glGenVertexArrays(1, &vao_t);
@@ -299,83 +293,31 @@ namespace SV{
     int Object::GetVertex_amount() const {
         return (int)Height;
     }
-    /*
-    Object::Object(const GT::Geometrical_components& components) {
-        Height = components.vertex.size();
-        Width = 6;
-        shader_parameters = {
-            components.vertex,
-            std::vector<glm::vec3>(components.vertex.size(),components.color)
-        };
-        Draw_mode = components.default_draw_mode;
-        Indexes_size = (int)components.index_size;
-        if (!shader_parameters.empty()){
-            Height = shader_parameters[0].size();
-            auto vertex       = Pack_shader_params();
-            auto vertex_size  = Get_arrays_size();
-            SetupObject(vertex, vertex_size, reinterpret_cast<uint *>(components.index), components.index_size);
-            free(vertex);
-        }
-        else{
-            VAO = 0;
-            VBO = 0;
-            EBO = 0;
-        }
+    Object::Object(const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors):Object(draw_mode,std::move(vectors),nullptr,0){
 
-    }
-    */
-    Object::Object(const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors) {
-        shader_parameters = std::move(vectors);
-        Draw_mode = draw_mode;
-        Width = shader_parameters.size()*3;
-        Indexes_size = 0;
-
-        if (!shader_parameters.empty()){
-            Height = shader_parameters[0].size();
-            auto vertexes       = Pack_shader_params();
-            auto vertexes_size  = Get_arrays_size();
-            SetupObject(vertexes,(long)vertexes_size); // Here
-            free(vertexes);
-        }
-        else{
-            VAO = 0;
-            VBO = 0;
-            EBO = 0;
-        }
     };
 
     std::vector<glm::vec3> Object::Get_vertexes() {
         return (shader_parameters[0]);
     }
 
-    Object::Object(const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors, uint *indexes,long indexes_size) {
-        shader_parameters = std::move(vectors);
-        Draw_mode = draw_mode;
-        Width = shader_parameters.size()*3;
-        Indexes_size = (int)indexes_size;
-        if (!shader_parameters.empty()){
-            Height = shader_parameters[0].size();
-            auto vertex       = Pack_shader_params();
-            auto vertex_size  = Get_arrays_size();
-            SetupObject(vertex,(long)vertex_size,indexes,indexes_size);
-            free(vertex);
-        }
-        else{
-            VAO = 0;
-            VBO = 0;
-            EBO = 0;
-        }/*
-        */
+    Object::Object(const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors, uint *indexes,long indexes_size):Object({0.0,0.0,0.0},draw_mode,std::move(vectors),nullptr,0){
     }
 
     float *Object::Pack_shader_params() {
         auto vertex_arrays = (float*) malloc(sizeof(float)*Width*Height);
-
         for (uint y = 0; y < Height; y++) {
             for (int x = 0; x < Width; x+=3) {
-                vertex_arrays[(y*Width)+x]    = shader_parameters[x/3][y].x;
-                vertex_arrays[(y*Width)+x+1]  = shader_parameters[x/3][y].y;
-                vertex_arrays[(y*Width)+x+2]  = shader_parameters[x/3][y].z;
+                if (x == 0){
+                    vertex_arrays[(y*Width)+x]    = shader_parameters[x/3][y].x + Position.x;
+                    vertex_arrays[(y*Width)+x+1]  = shader_parameters[x/3][y].y + Position.y;
+                    vertex_arrays[(y*Width)+x+2]  = shader_parameters[x/3][y].z + Position.z;
+                }else{
+                    vertex_arrays[(y*Width)+x]    = shader_parameters[x/3][y].x;
+                    vertex_arrays[(y*Width)+x+1]  = shader_parameters[x/3][y].y;
+                    vertex_arrays[(y*Width)+x+2]  = shader_parameters[x/3][y].z;
+
+                }
                 //printf("%d->%d,%d; %d: %f,%f,%f\n",Width*Height,x,y,(y*Width)+x,vertex_arrays[(y*Width)+x],vertex_arrays[(y*Width)+x+1],vertex_arrays[(y*Width)+x+2]);
             }
         }
@@ -397,17 +339,98 @@ namespace SV{
         }
     }
 
+    Object::Object(glm::vec3 position, const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors):Object(position,draw_mode,std::move(vectors),nullptr,0){
+    }
 
-    Line::Line(glm::vec3 origin, glm::vec3 target, glm::vec3 color):Object(GL_LINES,std::move(Generate_vectors(origin,target,color))){
+    Object::Object(glm::vec3 position, const GLenum &draw_mode, std::vector<std::vector<glm::vec3>> vectors,uint *indexes, long indexes_size) {
+        Position = position;
+        shader_parameters = std::move(vectors);
+        Draw_mode = draw_mode;
+        Width = shader_parameters.size()*3;
+        Indexes_size = (int)indexes_size;
+        if (!shader_parameters.empty()){
+
+            Height = shader_parameters[0].size();
+            auto vertex       = Pack_shader_params();
+            auto vertex_size  = Get_arrays_size();
+            SetupObject(vertex,(long)vertex_size,indexes,indexes_size);
+            free(vertex);
+        }
+        else{
+            VAO = 0;
+            VBO = 0;
+            EBO = 0;
+        }
+    }
+
+    void Object::Move(glm::vec3 displacement) {
+        Position += displacement;
+        //printf("position: %f,%f,%f\f",Position.x,Position.y,Position.z);
+    }
+
+    void Object::Update() {
+
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER,0,GLintptr(Get_arrays_size()* sizeof(float)),Pack_shader_params());
+    }
+
+    void Object::Rotate(glm::vec3 axis, float radians) {
+
+    }
+
+    void Object::Rotate(float pitch, float yaw) {
+
+    }
+
+    void Object::Scale_up(float scale) {
+
+    }
+
+    void Object::Mirror(glm::vec3 miror_plane) {
+
+    }
+
+
+    Line::Line(glm::vec3 origin, glm::vec3 target, glm::vec3 color):Object(origin,GL_LINES,std::move(Generate_vectors(origin,target,color))){
     }
 
     std::vector<std::vector<glm::vec3 >> Line::Generate_vectors(glm::vec3 origin, glm::vec3 target, glm::vec3 color) {
         std::vector<std::vector<glm::vec3>> vectors={
-                {origin,target},
+                {{0,0,0},target - origin},
                 std::vector<glm::vec3>(2,color)
         };
 
         return std::move(vectors);
+    }
+
+
+    N_agon::N_agon(glm::vec3 center, float radius, uint sides, glm::vec3 color): Object(center,((sides >= 4)? GL_TRIANGLE_FAN:GL_TRIANGLES),std::move(Generate_vectors(center,radius,sides,color))) {
+
+    }
+
+    std::vector<std::vector<glm::vec3>> N_agon::Generate_vectors(glm::vec3 center, float radius, uint sides, glm::vec3 color) {
+        if (sides <= 2){
+            throw  std::runtime_error(std::string("Error Creating N_agon, invalid number of sides: ").append(std::to_string(sides)).append("\n"));
+        }
+        std::vector<std::vector<glm::vec3>> vectors(2);
+        auto rads_distance = (float)(2 * M_PI/sides);
+
+        for(uint i = 0; i < sides; ++i) {
+            vectors[0].emplace_back(radius*cosf(rads_distance*((float)i)),radius*sinf(rads_distance*((float)i)),0.0);
+            vectors[1].push_back(color);
+            printf("%.2f,%.2f,%.2f\n",vectors[0].back().x,vectors[0].back().y,vectors[0].back() .z);
+        }
+        if (sides >= 4){
+            vectors[0].push_back(vectors[0][0]);
+            vectors[1].push_back(color);
+        }
+        printf("Measures: %.2zu %.2zu\n",vectors.size(),vectors[0].size());
+        return std::move(vectors);
+    }
+
+    Circle::Circle(glm::vec3 center, float radius, glm::vec3 color): N_agon(center,radius,40,color){
+
     }
 
 
