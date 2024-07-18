@@ -86,12 +86,13 @@ namespace SV{
     class Object{
         friend Window;
     private:
-        std::vector<std::vector<glm::vec3>> shader_parameters;
+
         uint    Width,Height;
         GLenum Draw_mode;
         [[maybe_unused]] GLuint VAO,VBO,EBO;
         int Indexes_size;
     protected:
+        std::vector<std::vector<glm::vec3>> shader_parameters;
         glm::vec3 Position{};
 
         void SetupObject(float* vertexes,long vertexes_size,uint* indexes,long indexes_size);
@@ -126,6 +127,7 @@ namespace SV{
         static std::vector<std::vector<glm::vec3 >>Generate_vectors(glm::vec3 origin, glm::vec3 target, glm::vec3 color);
     public:
         Line(glm::vec3 origin,glm::vec3 target,glm::vec3 color);
+        void Re_def(glm::vec3 origin,glm::vec3 target);
     };
     class [[maybe_unused]] N_agon : public Object{
     protected:
@@ -149,6 +151,13 @@ namespace SV{
 
     };
     class [[maybe_unused]] Polyhedron  : public Object{
+
+    };
+    class [[maybe_unused]] Hyperboloid : public Object{
+    protected:
+        static std::vector<std::vector<glm::vec3 >>Generate_vectors(glm::vec3 center, glm::vec3 focus, float difference, float lim_inf, float lim_sup, float resolution, uint points_per_disc, glm::vec3 color);
+    public:
+        Hyperboloid(glm::vec3 center,glm::vec3 focus,float diference,float lim_inf,float lim_sup,float resolution,uint points_per_disc, glm::vec3 color);
 
     };
 

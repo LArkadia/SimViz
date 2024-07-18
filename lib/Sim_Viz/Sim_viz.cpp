@@ -4,6 +4,7 @@
 
 #include "Sim_viz.hpp"
 
+#include <cmath>
 #include <utility>
 
 
@@ -404,6 +405,15 @@ namespace SV{
         return std::move(vectors);
     }
 
+    void Line::Re_def(glm::vec3 origin, glm::vec3 target) {
+        shader_parameters[0] = {
+                {0,0,0},
+                target - origin
+        };
+        Position = origin;
+        Update();
+    }
+
 
     N_agon::N_agon(glm::vec3 center, float radius, uint sides, glm::vec3 color): Object(center,((sides >= 4)? GL_TRIANGLE_FAN:GL_TRIANGLES),std::move(Generate_vectors(center,radius,sides,color))) {
 
@@ -433,5 +443,40 @@ namespace SV{
 
     }
 
+    std::vector<std::vector<glm::vec3 >> Hyperboloid::Generate_vectors(glm::vec3 center, glm::vec3 focus, float difference, float lim_inf, float lim_sup, float resolution, uint points_per_disc, glm::vec3 color) {
+        std::vector<std::vector<glm::vec3>> hyperboloid(2);
+            auto phi = std::atan2(center.x - focus.x,center.z - focus.z);
+            auto psi = std::atan2(center.y - focus.y, glm::length(glm::vec2(center.x - focus.x, center.z - focus.z)));
+            glm::mat4 rotation_Phi = glm::rotate(glm::mat4 (1),phi,glm::vec3 (0,1,0));
+            glm::mat4 rotation_Psi = glm::rotate(glm::mat4 (1),psi,glm::vec3 (1,0,0));
 
+            auto num_discs = (int) floorf(lim_sup -lim_inf / resolution);
+
+        for (int i  = 0; i < num_discs; i++){
+            float h = lim_inf + (resolution * (float)i) ;
+            float r = std::sinh(h);
+            for (int j = 0; j < points_per_disc; j++) {
+                auto theta = (float)(2 * M_PI * j / points_per_disc);
+
+                glm::vec4 vertex = glm::vec4(
+                        (difference * r * std::cos(theta)),
+                        (difference * r * std::sin(theta)),
+                        (glm::distance(center, focus) * std::cosh(h)),
+                        1.0f);
+                vertex = rotation_Phi* rotation_Psi * vertex;
+                hyperboloid[0].emplace_back(
+                                    vertex.x,
+                                    vertex.y,
+                                    vertex.z);
+                hyperboloid[1].push_back(color);
+            }
+        }
+
+        return hyperboloid;
+    }
+
+    Hyperboloid::Hyperboloid(glm::vec3 center, glm::vec3 focus, float diference, float lim_inf, float lim_sup,float resolution,uint points_per_disc, glm::vec3 color)
+    :Object(GL_POINTS,Generate_vectors(center,focus,diference,lim_inf,lim_sup,resolution,points_per_disc,color)) {
+
+    }
 }

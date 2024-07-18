@@ -11,7 +11,7 @@ out vec3 FragColor; // Color del vértice
 
 void main() {
     // Transformar la posición del vértice por la matriz de proyección
-    gl_Position = FTM*vec4(aPos.x,aPos.y,aPos.z, 1.0);
+    gl_Position = FTM*vec4(-aPos.x,aPos.y,aPos.z, 1.0);
 
     // Pasar el color del vértice al shader de fragmentos
     FragColor = aColor;
