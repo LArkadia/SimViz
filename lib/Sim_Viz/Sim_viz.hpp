@@ -104,8 +104,8 @@ namespace SV{
         [[maybe_unused]] Object(const GLenum& draw_mode,std::vector<std::vector<glm::vec3>> vectors);
         [[maybe_unused]] Object(const GLenum& draw_mode,std::vector<std::vector<glm::vec3>> vectors,uint* indexes,long indexes_size);
         //With position
-        Object(glm::vec3 position ,const GLenum& draw_mode,std::vector<std::vector<glm::vec3>> vectors);
-        Object(glm::vec3 position ,const GLenum& draw_mode,std::vector<std::vector<glm::vec3>> vectors,uint* indexes,long indexes_size);
+        [[maybe_unused]] Object(glm::vec3 position ,const GLenum& draw_mode,std::vector<std::vector<glm::vec3>> vectors);
+        [[maybe_unused]] Object(glm::vec3 position ,const GLenum& draw_mode,std::vector<std::vector<glm::vec3>> vectors,uint* indexes,long indexes_size);
         //Object(const GLenum& Draw_mode,const std::vector<glm::vec3>& vertex);
         //Object(const GLenum& Draw_mode,const std::vector<glm::vec3>& vertex,const std::vector<glm::vec3>& index);
         void Draw() const;
