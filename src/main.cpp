@@ -8,6 +8,7 @@ glm::vec3 Mid_Point(const glm::vec3& point1, const glm::vec3& point2) {
     return (point1 + point2) / 2.0f;
 }
 glm::vec3 Find_source(std::vector<glm::vec3> Hyperboloids);
+float hyperbolic_difference(glm::vec3 source,glm::vec3 f1,glm::vec3 f2);
 int main(){
     glm::vec3 Gris_bonito(0.1f,0.1f,0.1f);
 
@@ -26,6 +27,7 @@ int main(){
             {5,0,-5},
             {0,0,5}
     };
+    /*
     std::vector<SV::Hyperboloid> Hyperboloids;
     for (int i = 0; i < 4; ++i) {
         for (int j = i+1; j < 4; ++j) {
@@ -38,6 +40,31 @@ int main(){
             );
         }
     }
+     */
+    std::vector<SV::Line> lineas;
+    float radius = 5;
+    int points_disc = 10;
+    float step = radius/points_disc;
+    for (int i = 0; i < points_disc; i++)
+    {
+        float theta = i * M_PI/points_disc;
+        for (int j = 0; j < points_disc; j++)
+        {
+            float phi = 2 * M_PI * j /points_disc;
+            lineas.push_back(
+                SV::Line(
+                    {0,0,0},
+                {radius * std::sin(theta) * std::cos(phi),
+                radius * std::sin(theta) * std::sin(phi),
+                radius * std::cos(theta)},
+                {0,1,1}
+                )
+            );
+        }
+        
+    }
+    
+
 
     SV::Line Eje1(source,{0,0,0},{0,1,0});
 
@@ -49,6 +76,7 @@ int main(){
     SV::Line EJEX({-9.0, 0.0, 0.0}, {10.0, 0.0, 0.0}, {1, 0, 0});
     SV::Line EJEY({0.0, -5.0, 0.0}, {0.0, 5.0, 0.0}, {0, 1, 0});
     SV::Line EJEZ({0.0,0.0,-9.0},{0.0,0.0,10.0},{0,0,1});
+
     std::vector<SV::Line> mics;
     for (auto focus:microphones) {
         mics.emplace_back(
@@ -59,21 +87,24 @@ int main(){
     }
 
     //SV::N_agon nagono({0,0,0},1.0,6,{0.5,0.1,0.6});
-
-    float step = 0.005;
-    int n = 0;
+    SV::Line Fuente(
+        {0,0,0},
+        source,
+        {1,1,1}
+    );
     while(!window0.Should_close()){
-        n++;
+ 
         window0.Clear();
 
         EJEX.Draw();
         //EJEY.Draw();
         EJEZ.Draw();Eje1.Draw();
-        Hyperboloids[0].Draw();
-        Hyperboloids[1].Draw();
-        Hyperboloids[2].Draw();
-        Hyperboloids[3].Draw();
+        Fuente.Draw();
+
         for (const auto& line:mics){
+            line.Draw();
+        }
+        for(const auto& line:lineas){
             line.Draw();
         }
 
@@ -86,4 +117,7 @@ glm::vec3 Find_source(std::vector<glm::vec3> Hyperboloids){
     glm::vec3 source;
 
     return source;
+}
+float hyperbolic_difference(glm::vec3 source,glm::vec3 f1,glm::vec3 f2){
+    return glm::distance(source,f1) - glm::distance(source,f2);
 }
