@@ -39,6 +39,7 @@ namespace SV{
         ~Window();
         void Get_context() const;
         void Mount_FTM_2_shader(const std::string &shader_name);
+        void Mount_Dimensions_2_shader(const std::string &shaders_name);
         [[maybe_unused]] void Set_background_color(glm::vec3 color);
         void Clear() const;
         void Present_renderer() const;
@@ -118,7 +119,7 @@ namespace SV{
         [[maybe_unused]] void Rotate(glm::vec3 axis,float radians);
         [[maybe_unused]] void Rotate(float pitch,float yaw);
         [[maybe_unused]] void Scale_up(float scale);
-        [[maybe_unused]] void Mirror(glm::vec3 miror_plane);
+        [[maybe_unused]] void Mirror(glm::vec3 mirror_plane);
         [[maybe_unused]] void Update();
 
     };

@@ -88,7 +88,14 @@ namespace SV{
         glUniformMatrix4fv(FTM_Loc,1,GL_FALSE,glm::value_ptr(transformations.GetFTM()));
     }
 
-
+    void Window::Mount_Dimensions_2_shader(const std::string &shaders_name) {
+        auto shader_program = shaders->Get_shader_program(shaders_name);
+        GLint Width_Loc = glGetUniformLocation(shader_program,"Width");
+        GLint Height_Loc = glGetUniformLocation(shader_program,"Height");
+        glUseProgram(shader_program);
+        glUniform1ui(Width_Loc,width);
+        glUniform1ui(Height_Loc,height);
+    }
 
 
     void Say_hello(){
@@ -388,7 +395,7 @@ namespace SV{
 
     }
 
-    void Object::Mirror(glm::vec3 miror_plane) {
+    void Object::Mirror(glm::vec3 mirror_plane) {
 
     }
 
@@ -429,17 +436,17 @@ namespace SV{
         for(uint i = 0; i < sides; ++i) {
             vectors[0].emplace_back(radius*cosf(rads_distance*((float)i)),radius*sinf(rads_distance*((float)i)),0.0);
             vectors[1].push_back(color);
-            printf("%.2f,%.2f,%.2f\n",vectors[0].back().x,vectors[0].back().y,vectors[0].back() .z);
+            //printf("%.2f,%.2f,%.2f\n",vectors[0].back().x,vectors[0].back().y,vectors[0].back() .z);
         }
         if (sides >= 4){
             vectors[0].push_back(vectors[0][0]);
             vectors[1].push_back(color);
         }
-        printf("Measures: %.2zu %.2zu\n",vectors.size(),vectors[0].size());
+        //printf("Measures: %.2zu %.2zu\n",vectors.size(),vectors[0].size());
         return std::move(vectors);
     }
 
-    Circle::Circle(glm::vec3 center, float radius, glm::vec3 color): N_agon(center,radius,40,color){
+    Circle::Circle(glm::vec3 center, float radius, glm::vec3 color): N_agon(center,radius,50,color){
 
     }
 
@@ -447,7 +454,7 @@ namespace SV{
         std::vector<std::vector<glm::vec3>> hyperboloid(2);
             auto phi = std::atan2(focus.x-center.x ,focus.z - center.z );
             auto psi = std::atan2(center.y-focus.y , glm::length(glm::vec2(focus.x - center.x, focus.z - center.z)));
-            printf("PSI = %.2f, PHI = %.2f\n",psi*57.2958,phi*57.2958);
+            //printf("PSI = %.2f, PHI = %.2f\n",psi*57.2958,phi*57.2958);
 
             glm::mat4 rotation_Phi = glm::rotate(glm::mat4 (1),phi,glm::vec3 (0,1,0));
             glm::mat4 rotation_Psi = glm::rotate(glm::mat4 (1),psi,glm::vec3 (1,0,0));
